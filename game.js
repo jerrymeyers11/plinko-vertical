@@ -22,9 +22,9 @@ let puck = null; let isPuckInPlay = false; let isTurnInProgress = false; let puc
 const scoreDisplay = document.getElementById('score-display'); 
 const scoreContainer = document.getElementById('score-container');
 
-// Position score container using scaled values
-scoreContainer.style.top = (145 * SCALE_FACTOR) + 'px';
-scoreContainer.style.left = (1580 * SCALE_FACTOR) + 'px';
+// Position score container responsively
+scoreContainer.style.top = '8vh';
+scoreContainer.style.right = '3vw';
 const labelsContainer = document.getElementById('labels-container');
 const modal = document.getElementById('modal'); const modalMessage = document.getElementById('modal-message'); const modalButton = document.getElementById('modal-button');
 const pegs = []; const rows = 16; const spacing = PLAY_AREA_WIDTH / 9; const pegRadius = spacing * 0.1; const startYOffset = PLAY_AREA_Y; const leftEdgePoints = []; const rightEdgePoints = []; const lastRowPegXs = []; const puckRadius = spacing * 0.35; for (let i = 0; i < rows; i++) { const numPegs = (i % 2 === 0) ? 9 : 10; const y = startYOffset + (i * spacing); const rowWidth = (numPegs - 1) * spacing; const startX = PLAY_AREA_X + (PLAY_AREA_WIDTH - rowWidth) / 2; leftEdgePoints.push({ x: startX, y: y }); rightEdgePoints.push({ x: startX + rowWidth, y: y }); for (let j = 0; j < numPegs; j++) { const x = startX + j * spacing; const peg = Bodies.circle(x, y, pegRadius, { isStatic: true, restitution: 0.5, friction: 0.1, render: { fillStyle: '#333' } }); pegs.push(peg); if (i === rows - 1) { lastRowPegXs.push(x); } } } Composite.add(world, pegs); const lastPegY = leftEdgePoints[leftEdgePoints.length - 1].y; const dividerHeight = spacing; const slotsY = lastPegY + (spacing * 2); const outerWallY = slotsY - dividerHeight / 2; const wallOffset = spacing; const wallThickness = pegRadius; const wallSegments = []; const finalPointY = lastPegY + spacing; const finalRowWidth = (9 - 1) * spacing; const finalStartX = PLAY_AREA_X + (PLAY_AREA_WIDTH - finalRowWidth) / 2; leftEdgePoints.push({ x: finalStartX, y: finalPointY }); rightEdgePoints.push({ x: finalStartX + finalRowWidth, y: finalPointY }); function createWallFromPoints(points, side) { for (let i = 0; i < points.length - 1; i++) { const p1 = points[i]; const p2 = points[i+1]; const offset = (side === 'left') ? -wallOffset : wallOffset; const midX = (p1.x + p2.x) / 2 + offset; const midY = (p1.y + p2.y) / 2; const deltaX = p2.x - p1.x; const deltaY = p2.y - p1.y; const length = Math.sqrt(deltaX * deltaX + deltaY * deltaY); const angle = Math.atan2(deltaY, deltaX); const segment = Bodies.rectangle(midX, midY, length, wallThickness, { isStatic: true, angle: angle, render: { visible: false } }); wallSegments.push(segment); } } createWallFromPoints(leftEdgePoints, 'left'); createWallFromPoints(rightEdgePoints, 'right'); Composite.add(world, wallSegments);
@@ -79,8 +79,13 @@ function updateAndDisplaySlots() {
     slotValues.forEach(value => {
         const labelDiv = document.createElement('div'); labelDiv.classList.add('slot-label');
         const textSpan = document.createElement('span'); textSpan.textContent = value;
-        if (value < 0 || value === '❌' || value === '💣') { textSpan.style.color = '#d32f2f'; textSpan.style.fontSize = `${spacing * 0.324}px`; }
-        else { textSpan.style.fontSize = `${spacing * 0.324}px`; }
+        if (value < 0 || value === '❌' || value === '💣') { 
+            textSpan.style.color = '#d32f2f'; 
+            textSpan.style.fontSize = `clamp(12px, ${Math.max(12, spacing * 0.324)}px, 18px)`;
+        }
+        else { 
+            textSpan.style.fontSize = `clamp(12px, ${Math.max(12, spacing * 0.324)}px, 18px)`;
+        }
         labelDiv.style.width = `${slotWidth}px`; labelDiv.appendChild(textSpan); labelsContainer.appendChild(labelDiv);
     });
 }
