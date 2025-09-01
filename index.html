@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Plinko Game Screen</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <style>
+        html, body { margin: 0; padding: 0; overflow: hidden; background-color: #000; font-family: Arial, sans-serif; width: 100%; height: 100%; }
+        body { display: flex; justify-content: center; align-items: center; }
+        #canvas-container { position: relative; }
+        #canvas-container canvas { background-color: transparent; display: block; position: relative; z-index: 2; }
+        #game-background, #game-cover, #ui-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+        #game-background { z-index: 1; }
+        #game-cover { z-index: 3; }
+        #ui-overlay { z-index: 5; }
+        #labels-container { z-index: 4; }
+        #score-container { 
+            position: absolute; 
+            text-align: left; 
+            background-color: rgba(0, 0, 0, 0); 
+            color: white; 
+    padding: 15px 25px; 
+    border-radius: 10px; 
+}
+        #score-display { font-size: 3.2vw; font-weight: bold; }
+        #labels-container { position: absolute; bottom: 40px; display: flex; pointer-events: none; }
+        #modal.hidden { display: none; }
+        .slot-label { display: flex; justify-content: center; align-items: center; box-sizing: border-box; height: 80px; }
+        .slot-label span { display: block; transform: rotate(90deg); transform-origin: center center; font-weight: bold; color: #fff; }
+        #modal { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.7); display: flex; justify-content: center; align-items: center; z-index: 100; }
+        #modal-content { background-color: white; padding: 40px; border-radius: 10px; text-align: center; max-width: 500px; }
+        #modal-message { font-size: 24px; margin-bottom: 20px; }
+        #modal-button { padding: 10px 20px; font-size: 18px; cursor: pointer; }
+        #qr-container { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: white; padding: 20px; border-radius: 10px; z-index: 10; text-align: center;}
+    </style>
+</head>
+<body>
+    <div id="canvas-container">
+        <div id="qr-container">
+            <h2>Scan to Play!</h2>
+            <div id="qrcode"></div>
+        </div>
+        <div id="modal" class="hidden">
+            <div id="modal-content">
+                <p id="modal-message"></p>
+                <button id="modal-button">Continue</button>
+            </div>
+        </div>
+        <img src="plinko-background.png" id="game-background">
+        <img src="plinko-cover.png" id="game-cover">
+        <div id="ui-overlay">
+            <div id="score-container">
+                <div id="score-display">Score: 0</div>
+            </div>
+        </div>
+        <div id="labels-container"></div>
+    </div>
+
+    <!-- THIS SCRIPT ORDER IS CRITICAL -->
+    <script src="/socket.io/socket.io.js"></script>
+    
+    <!-- THIS SCRIPT WAS MISSING -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+
+    <script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
+    <script src="game.js"></script>
+</body>
+</html>

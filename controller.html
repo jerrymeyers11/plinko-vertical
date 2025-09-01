@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Plinko Controller</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            text-align: center; 
+            background-color: #f0f0f0; 
+            padding: 20px; 
+            touch-action: manipulation; 
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .controller-wrapper { 
+            max-width: 400px; 
+            margin: 0 auto; 
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* Score at the top */
+        #score-container { 
+            background-color: #333; 
+            color: white; 
+            padding: 25px; 
+            border-radius: 10px; 
+            margin-bottom: 30px;
+            order: 1;
+        }
+        #score-display { 
+            font-size: 36px; 
+            font-weight: bold; 
+        }
+        
+        /* Button styling */
+        button { 
+            width: 100%; 
+            padding: 30px; 
+            font-size: 28px; 
+            font-weight: bold; 
+            margin-bottom: 20px; 
+            border-radius: 12px; 
+            border: none; 
+            color: white; 
+            cursor: pointer;
+            min-height: 80px;
+            aspect-ratio: 1; /* Makes buttons square */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* Large primary buttons */
+        #startButton { 
+            background-color: #007BFF; 
+        }
+        #dropButton { 
+            background-color: #17a2b8; 
+        }
+        #continueButton { 
+            background-color: #28a745; 
+        }
+        
+        /* Smaller risk/bank buttons */
+        #riskItButton, #bankButton { 
+            aspect-ratio: auto; /* Override square for these buttons */
+            min-height: 60px;
+            padding: 20px;
+            font-size: 24px;
+        }
+        #riskItButton { 
+            background-color: #ffc107; 
+            color: #333; 
+        }
+        #bankButton { 
+            background-color: #dc3545; 
+        }
+        
+        .hidden { 
+            display: none; 
+        }
+        
+        /* Game controls container */
+        #game-controls {
+            order: 2;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+    </style>
+</head>
+<body>
+    <div class="controller-wrapper">
+        <h2 id="statusMessage">Connecting to game...</h2>
+        
+        <!-- Score moved outside and above game-controls -->
+        <div id="score-container">
+            <div id="score-display">Score: 0</div>
+        </div>
+        
+        <div id="game-controls" class="hidden">
+            <button id="startButton">Start Game</button>
+            <button id="dropButton" class="hidden">DROP PUCK</button>
+            <button id="continueButton" class="hidden">Continue ▶</button>
+            <button id="riskItButton" class="hidden">Risk It! 🔥</button>
+            <button id="bankButton" class="hidden">End Game ✖</button>
+        </div>
+    </div>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        // This is your working controller script, with the new buttons added
+        const socket = io();
+            // Add this line here:
+    socket.on('connect', () => {
+        console.log('CONTROLLER: Socket connected at', new Date().toISOString());
+    });
+    
+    // Connection monitoring
+    socket.on('disconnect', (reason) => {
+        console.log('CONTROLLER: Disconnected at', new Date().toISOString(), 'reason:', reason);
+        statusMessage.textContent = 'Connection lost, reconnecting...';
+        statusMessage.classList.remove('hidden');
+        gameControls.classList.add('hidden');
+    });
+    
+    socket.on('reconnect', (attemptNumber) => {
+        console.log('CONTROLLER: Reconnected at', new Date().toISOString(), 'after', attemptNumber, 'attempts');
+        // Re-join room if we have a roomId
+        if (roomId) {
+            console.log('CONTROLLER: Re-joining room:', roomId);
+            socket.emit('joinRoom', roomId);
+        }
+    });
+    
+    socket.on('reconnect_error', (error) => {
+        console.log('CONTROLLER: Reconnection failed at', new Date().toISOString(), 'error:', error);
+    });
+        const statusMessage = document.getElementById('statusMessage');
+        const gameControls = document.getElementById('game-controls');
+        const startButton = document.getElementById('startButton');
+        const dropButton = document.getElementById('dropButton');
+        const continueButton = document.getElementById('continueButton');
+        const riskItButton = document.getElementById('riskItButton');
+        const bankButton = document.getElementById('bankButton');
+        const scoreDisplay = document.getElementById('score-display');
+        let roomId = '';
+        window.onload = () => { const params = new URLSearchParams(window.location.search); roomId = params.get('room'); console.log('CONTROLLER: Attempting to join room:', roomId); if (roomId) { socket.emit('joinRoom', roomId); } else { console.log('CONTROLLER: No room ID found in URL'); statusMessage.textContent = 'Error: No Room ID found.'; } };
+        socket.on('joinSuccess', (id) => { console.log('CONTROLLER: Successfully joined room:', id); statusMessage.classList.add('hidden'); gameControls.classList.remove('hidden'); roomId = id; });
+        socket.on('joinError', (message) => { console.log('CONTROLLER: Failed to join room:', message); statusMessage.textContent = message; });
+        function sendCommand(command) { 
+            console.log("CONTROLLER: Sending command at", new Date().toISOString(), command, "to room", roomId);
+            socket.emit('controllerCommand', { roomId, command }); 
+        }
+        startButton.addEventListener('click', () => sendCommand('start'));
+        dropButton.addEventListener('click', () => sendCommand('drop'));
+        continueButton.addEventListener('click', () => sendCommand('continue'));
+        riskItButton.addEventListener('click', () => sendCommand('riskIt'));
+        bankButton.addEventListener('click', () => sendCommand('bank'));
+        socket.on('update', (data) => {
+    console.log("CONTROLLER: Received update at", new Date().toISOString(), data);
+    if (data.score !== undefined) { scoreDisplay.textContent = `Score: ${data.score}`; }
+    
+    // Log button visibility changes for debugging
+    const buttonStates = {
+        start: !data.showStart,
+        drop: !data.showDrop, 
+        continue: !data.showContinue,
+        riskIt: !data.showRiskIt,
+        bank: !data.showBank
+    };
+    console.log("CONTROLLER: Button states:", buttonStates);
+    
+    startButton.classList.toggle('hidden', !data.showStart);
+    dropButton.classList.toggle('hidden', !data.showDrop);
+    continueButton.classList.toggle('hidden', !data.showContinue);
+    riskItButton.classList.toggle('hidden', !data.showRiskIt);
+    bankButton.classList.toggle('hidden', !data.showBank);
+});
+    </script>
+</body>
+</html>
