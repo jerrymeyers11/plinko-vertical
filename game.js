@@ -17,7 +17,7 @@ const gameSettings = {
     phase3MaxBadIcons: 5,
 };
 // --- (The rest of the setup is unchanged, exactly as you provided) ---
-var engine = Engine.create(); var world = engine.world; engine.timing.timeScale = SCALE_FACTOR; world.gravity.y = 3.5; var render = Render.create({ element: document.getElementById('canvas-container'), engine: engine, options: { width: NEW_CANVAS_WIDTH, height: NEW_CANVAS_HEIGHT, wireframes: false, background: 'transparent' } }); Render.run(render); var runner = Runner.create(); Runner.run(runner, engine);
+var engine = Engine.create(); var world = engine.world; engine.timing.timeScale = SCALE_FACTOR; world.gravity.y = 3.5 / SCALE_FACTOR; var render = Render.create({ element: document.getElementById('canvas-container'), engine: engine, options: { width: NEW_CANVAS_WIDTH, height: NEW_CANVAS_HEIGHT, wireframes: false, background: 'transparent' } }); Render.run(render); var runner = Runner.create(); Runner.run(runner, engine);
 let puck = null; let isPuckInPlay = false; let isTurnInProgress = false; let puckHasLanded = false; let turnScore = 0; let roundCounter = 0; let gamePhase = 1; let slotValues = [];
 const scoreDisplay = document.getElementById('score-display'); 
 const scoreContainer = document.getElementById('score-container');
